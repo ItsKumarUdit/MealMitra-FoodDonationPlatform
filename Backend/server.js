@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
+const twilio = require('twilio'); // Add Twilio
 require('dotenv').config();
 const authRoutes = require('./routes/auth');
 
@@ -11,6 +12,12 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
+
+// Twilio Configuration (use .env in production)
+const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC8885b90f898f76ffb20904718a79fed0';
+const authToken = process.env.TWILIO_AUTH_TOKEN || '2b57863b3849a794c47b91ddcc5ef232';
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+16085576400'; // e.g., +12345678901
+const twilioClient = new twilio(accountSid, authToken);
 
 // MongoDB Connection
 mongoose.connect('mongodb://127.0.0.1:27017/foodDonationDB', {
@@ -53,7 +60,7 @@ const donationSchema = new mongoose.Schema({
     expiryDate: Date,
     location: String,
     submittedAt: { type: Date, default: Date.now },
-    status: { type: String, default: 'Listed on site', enum: ['Listed on site', 'Accepted'] } // New status field
+    status: { type: String, default: 'Listed on site', enum: ['Listed on site', 'Accepted'] }
 });
 
 const Donation = mongoose.model('Donation', donationSchema);
@@ -173,7 +180,7 @@ app.get("/api/donations", async (req, res) => {
     }
 });
 
-// Accept a Donation (New Route)
+// Accept a Donation (Updated with Twilio SMS)
 app.patch("/api/donations/:id/accept", async (req, res) => {
     try {
         const donation = await Donation.findById(req.params.id);
@@ -183,10 +190,19 @@ app.patch("/api/donations/:id/accept", async (req, res) => {
         donation.status = 'Accepted';
         await donation.save();
         console.log("Donation accepted:", donation);
+
+        // Send SMS via Twilio
+        await twilioClient.messages.create({
+            body: 'Your donation has been accepted',
+            from: twilioPhoneNumber,
+            to: donation.mobile // Assumes mobile is in E.164 format (e.g., +12345678901)
+        });
+        console.log(`SMS sent to ${donation.mobile}`);
+
         res.json({ message: "Donation accepted successfully!" });
     } catch (error) {
-        console.error("Error accepting donation:", error);
-        res.status(500).json({ message: "Error accepting donation!", error: error.message });
+        console.error("Error accepting donation or sending SMS:", error);
+        res.status(500).json({ message: "Error accepting donation or sending SMS!", error: error.message });
     }
 });
 
