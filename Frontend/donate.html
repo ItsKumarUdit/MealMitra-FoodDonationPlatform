@@ -18,8 +18,8 @@
             font-size: 1em;
             text-decoration: none;
             transition: background-color 0.3s ease;
-            z-index: 1001; /* Ensure above overlay */
-            pointer-events: auto; /* Ensure clickable */
+            z-index: 1001;
+            pointer-events: auto;
         }
         .login-button:hover {
             background-color: #45a049;
@@ -63,14 +63,8 @@
             background-color: #e53935;
         }
         @keyframes fadeIn {
-            0% {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(0.9);
-            }
-            100% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
         }
         body {
             margin: 0;
@@ -118,8 +112,8 @@
             font-weight: bold;
             transition: transform 0.3s ease, background 0.3s ease, box-shadow 0.3s ease;
             box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
-            z-index: 1001; /* Ensure above overlay */
-            pointer-events: auto; /* Ensure clickable */
+            z-index: 1001;
+            pointer-events: auto;
         }
         #login-button:hover {
             transform: scale(1.1);
@@ -165,7 +159,7 @@
 
     <header>
         <div class="header-content">
-            <img src="logo.png" alt="MealMitra Logo" class="logo"> <!-- Add your logo file here -->
+            <img src="logo.png" alt="MealMitra Logo" class="logo">
             <h1>MealMitra - Food Donation Platform</h1>
         </div>
         <nav>
@@ -274,47 +268,6 @@
             console.log('Going back');
             profilePopup.classList.remove('active');
         }
-    
-        // Form submission with fetch
-        document.getElementById('donationForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-    
-            const formData = {
-                name: document.getElementById('name').value,
-                email: document.getElementById('email').value,
-                mobile: document.getElementById('mobile').value,
-                foodDetails: document.getElementById('foodDetails').value,
-                expiryDate: document.getElementById('expiryDate').value,
-                location: document.getElementById('location').value,
-                timestamp: new Date().toISOString()
-            };
-    
-            console.log('Submitting form data:', formData);
-    
-            try {
-                const response = await fetch('http://localhost:5000/submit-donation', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(formData)
-                });
-    
-                console.log('Response status:', response.status);
-                const responseData = await response.json();
-                console.log('Response data:', responseData);
-    
-                if (response.ok) {
-                    alert('Donation submitted successfully!');
-                    window.location.href = 'donations.html';
-                } else {
-                    alert('Error submitting donation: ' + responseData.message);
-                }
-            } catch (error) {
-                console.error('Submission error:', error);
-                alert('An error occurred while submitting the donation: ' + error.message);
-            }
-        });
     </script>
     <script src="FSD_JS.js"></script>
 </body>
