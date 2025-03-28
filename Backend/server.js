@@ -16,7 +16,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Twilio Configuration (use .env in production)
 const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC**************************d0';
 const authToken = process.env.TWILIO_AUTH_TOKEN || '2b****************************32';
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+16********0'; // e.g., +12345678901
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+16********0';
 const twilioClient = new twilio(accountSid, authToken);
 
 // MongoDB Connection
