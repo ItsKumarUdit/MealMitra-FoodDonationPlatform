@@ -21,7 +21,10 @@ document.addEventListener("DOMContentLoaded", function() {
 // Donation System
 function initializeDonationSystem() {
     if (donationForm) {
+        // Ensure only one listener is attached
+        donationForm.removeEventListener("submit", handleDonationSubmit);
         donationForm.addEventListener("submit", handleDonationSubmit);
+        console.log("Donation form listener attached");
     }
     
     if (donationList && !isDonationsLoaded) {
@@ -31,6 +34,13 @@ function initializeDonationSystem() {
 
 async function handleDonationSubmit(event) {
     event.preventDefault();
+
+    const errorMessage = document.getElementById("error-message");
+    const successMessage = document.getElementById("success-message");
+    if (errorMessage && successMessage) {
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+    }
 
     const formData = {
         name: document.getElementById("name").value,
@@ -42,9 +52,16 @@ async function handleDonationSubmit(event) {
     };
 
     if (!validateMobileNumber(formData.mobile)) {
-        alert("Invalid phone number. Use format: +[country code][number], e.g., +966123456789");
+        if (errorMessage) {
+            errorMessage.textContent = "Invalid phone number. Use format: +[country code][number], e.g., +966123456789";
+            errorMessage.style.display = "block";
+        } else {
+            alert("Invalid phone number. Use format: +[country code][number], e.g., +966123456789");
+        }
         return;
     }
+
+    console.log("Submitting donation:", formData);
 
     try {
         const response = await fetch("http://localhost:5000/submit-donation", {
@@ -54,16 +71,26 @@ async function handleDonationSubmit(event) {
         });
 
         const result = await response.json();
-        
-        if (response.ok) {
+        console.log("Server response:", { status: response.status, result });
+
+        if (response.ok) { // Status 200-299
+            if (successMessage) {
+                successMessage.textContent = result.message || "Donation submitted successfully!";
+                successMessage.style.display = "block";
+            }
             donationForm.reset();
-            window.location.href = "donations.html";
+            setTimeout(() => window.location.href = "donations.html", 1000); // Delay to show success
         } else {
-            alert(result.message || "Failed to submit donation.");
+            throw new Error(result.message || "Failed to submit donation");
         }
     } catch (error) {
         console.error("Donation submission error:", error);
-        alert("Error submitting donation. Please try again later.");
+        if (errorMessage) {
+            errorMessage.textContent = error.message || "Error submitting donation. Please try again later.";
+            errorMessage.style.display = "block";
+        } else {
+            alert(error.message || "Error submitting donation. Please try again later.");
+        }
     }
 }
 
@@ -128,7 +155,9 @@ function createDonationItem(donation) {
 // Food Request System
 function initializeRequestSystem() {
     if (requestFoodForm) {
+        requestFoodForm.removeEventListener("submit", handleRequestSubmit);
         requestFoodForm.addEventListener("submit", handleRequestSubmit);
+        console.log("Request form listener attached");
     }
     
     if (foodRequestList && !isRequestsLoaded) {
@@ -139,11 +168,20 @@ function initializeRequestSystem() {
 async function handleRequestSubmit(event) {
     event.preventDefault();
 
+    const errorMessage = document.getElementById("error-message");
+    const successMessage = document.getElementById("success-message");
+    if (errorMessage && successMessage) {
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+    }
+
     const requestData = {
         requestorName: document.getElementById("requestorName").value,
         requestorMobile: document.getElementById("requestorMobile").value,
         requestorLocation: document.getElementById("requestorLocation").value
     };
+
+    console.log("Submitting food request:", requestData);
 
     try {
         const response = await fetch("http://localhost:5000/api/request-food", {
@@ -153,16 +191,26 @@ async function handleRequestSubmit(event) {
         });
 
         const result = await response.json();
-        
+        console.log("Server response:", { status: response.status, result });
+
         if (response.ok) {
+            if (successMessage) {
+                successMessage.textContent = result.message || "Food request submitted successfully!";
+                successMessage.style.display = "block";
+            }
             requestFoodForm.reset();
-            window.location.href = "Food_Request.html";
+            setTimeout(() => window.location.href = "Food_Request.html", 1000);
         } else {
-            alert(result.message || "Failed to submit request.");
+            throw new Error(result.message || "Failed to submit request");
         }
     } catch (error) {
         console.error("Request submission error:", error);
-        alert("Error submitting request. Please try again later.");
+        if (errorMessage) {
+            errorMessage.textContent = error.message || "Error submitting request. Please try again later.";
+            errorMessage.style.display = "block";
+        } else {
+            alert(error.message || "Error submitting request. Please try again later.");
+        }
     }
 }
 
@@ -199,7 +247,7 @@ function createRequestItem(request) {
             <p>Mobile: ${request.requestorMobile}</p>
             <p>Location: <a href="https://www.google.com/maps/search/${encodeURIComponent(request.requestorLocation)}" target="_blank">${request.requestorLocation}</a></p>
             <button onclick="acceptRequest('${request._id}')">Accept Request</button>
-            <button onclick="deleteFoodRequest('${request._id}')">Remove</button>
+             
         </div>
     `;
 }
@@ -297,23 +345,51 @@ async function acceptRequest(requestId) {
     }
 }
 
-async function deleteFoodRequest(requestId) {
-    if (!confirm("Are you sure you want to delete this request?")) return;
-    
+ 
+
+function toggleChat() {
+    const chatBox = document.getElementById("chat-box");
+    chatBox.style.display = chatBox.style.display === "none" ? "block" : "none";
+}
+
+async function sendMessage() {
+    const input = document.getElementById("chat-input");
+    const message = input.value.trim();
+    if (!message) return;
+
+    const log = document.getElementById("chat-log");
+    log.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
+    input.value = '';
+
+    // Add typing indicator
+    const typingId = `typing-${Date.now()}`;
+    log.innerHTML += `<div id="${typingId}"><strong>Bot:</strong> Typing...</div>`;
+    log.scrollTop = log.scrollHeight;
+
     try {
-        const response = await fetch(`http://localhost:5000/api/food-requests/${requestId}`, {
-            method: "DELETE",
-            headers: { "Content-Type": "application/json" }
+        const res = await fetch('http://localhost:5000/api/chat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message })
         });
 
-        if (response.ok) {
-            await fetchAndUpdateFoodRequests();
+        const data = await res.json();
+
+        // Remove typing indicator
+        document.getElementById(typingId).remove();
+
+        if (data.reply) {
+            log.innerHTML += `<div><strong>Bot:</strong> ${data.reply}</div>`;
+        } else if (data.error) {
+            log.innerHTML += `<div><strong>Bot:</strong> Error: ${data.error}${data.details ? ' - ' + data.details : ''}</div>`;
         } else {
-            const errorData = await response.json();
-            alert(errorData.message || "Failed to delete request.");
+            log.innerHTML += `<div><strong>Bot:</strong> Unexpected response from server.</div>`;
         }
     } catch (error) {
-        console.error("Request deletion error:", error);
-        alert("Error deleting request: " + error.message);
+        console.error("Fetch error:", error);
+        document.getElementById(typingId).remove();
+        log.innerHTML += `<div><strong>Bot:</strong> Failed to connect to the server. Please try again later.</div>`;
     }
+
+    log.scrollTop = log.scrollHeight;
 }
