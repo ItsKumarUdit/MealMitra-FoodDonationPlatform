@@ -2,10 +2,11 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const path = require('path');
-const twilio = require('twilio'); // Add Twilio
+const twilio = require('twilio');
+const OpenAI = require('openai');
 require('dotenv').config();
-const authRoutes = require('./routes/auth');
 
+const authRoutes = require('./routes/auth');
 const app = express();
 
 // Middleware
@@ -13,10 +14,10 @@ app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
-// Twilio Configuration (use .env in production)
-const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC**************************d0';
-const authToken = process.env.TWILIO_AUTH_TOKEN || '2b****************************32';
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+16********0';
+// Twilio Configuration
+const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC***************************59';
+const authToken = process.env.TWILIO_AUTH_TOKEN || 'aa*****************************39';
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+15**********77';
 const twilioClient = new twilio(accountSid, authToken);
 
 // MongoDB Connection
@@ -37,7 +38,6 @@ const complaintSchema = new mongoose.Schema({
     complaint: String,
     date: { type: Date, default: Date.now }
 });
-
 const Complaint = mongoose.model("Complaint", complaintSchema);
 
 // Food Request Schema
@@ -48,10 +48,9 @@ const foodRequestSchema = new mongoose.Schema({
     timestamp: { type: Date, default: Date.now },
     status: { type: String, default: 'pending', enum: ['pending', 'accepted'] }
 });
-
 const FoodRequest = mongoose.model("FoodRequest", foodRequestSchema);
 
-// Donation Schema with Status
+// Donation Schema
 const donationSchema = new mongoose.Schema({
     name: String,
     email: String,
@@ -62,7 +61,6 @@ const donationSchema = new mongoose.Schema({
     submittedAt: { type: Date, default: Date.now },
     status: { type: String, default: 'Listed on site', enum: ['Listed on site', 'Accepted'] }
 });
-
 const Donation = mongoose.model('Donation', donationSchema);
 
 // Handle Complaint Submission
@@ -82,6 +80,7 @@ app.post("/api/submit-complaint", async (req, res) => {
     }
 });
 
+// Handle Food Request Submission
 // Handle Food Request Submission
 app.post("/api/request-food", async (req, res) => {
     try {
@@ -127,30 +126,14 @@ app.patch("/api/food-requests/:id/accept", async (req, res) => {
     }
 });
 
-// Delete a Food Request
-app.delete("/api/food-requests/:id", async (req, res) => {
-    try {
-        const request = await FoodRequest.findByIdAndDelete(req.params.id);
-        if (!request) {
-            return res.status(404).json({ message: "Request not found" });
-        }
-        console.log("Food request deleted:", request);
-        res.json({ message: "Request deleted successfully!" });
-    } catch (error) {
-        console.error("Error deleting request:", error);
-        res.status(500).json({ message: "Error deleting request!", error: error.message });
-    }
-});
 
 // Handle Donation Submission
 app.post("/submit-donation", async (req, res) => {
     try {
         const { name, email, mobile, foodDetails, expiryDate, location } = req.body;
-
         if (!name || !email || !mobile || !foodDetails || !expiryDate || !location) {
             return res.status(400).json({ message: "All fields are required!" });
         }
-
         const newDonation = new Donation({
             name,
             email,
@@ -159,7 +142,6 @@ app.post("/submit-donation", async (req, res) => {
             expiryDate,
             location
         });
-
         await newDonation.save();
         console.log("Donation saved:", newDonation);
         res.status(201).json({ message: "Donation submitted successfully!" });
@@ -180,7 +162,7 @@ app.get("/api/donations", async (req, res) => {
     }
 });
 
-// Accept a Donation (Updated with Twilio SMS)
+// Accept a Donation + Send SMS
 app.patch("/api/donations/:id/accept", async (req, res) => {
     try {
         const donation = await Donation.findById(req.params.id);
@@ -191,11 +173,11 @@ app.patch("/api/donations/:id/accept", async (req, res) => {
         await donation.save();
         console.log("Donation accepted:", donation);
 
-        // Send SMS via Twilio
+        // Send SMS
         await twilioClient.messages.create({
             body: 'Your donation has been accepted',
             from: twilioPhoneNumber,
-            to: donation.mobile // Assumes mobile is in E.164 format (e.g., +12345678901)
+            to: donation.mobile
         });
         console.log(`SMS sent to ${donation.mobile}`);
 
@@ -206,5 +188,61 @@ app.patch("/api/donations/:id/accept", async (req, res) => {
     }
 });
 
+// AI Chat Endpoint (OpenAI GPT Chatbot)
+const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY || "sk*****************************************A"
+});
+
+app.post("/api/chat", async (req, res) => {
+    const { message } = req.body;
+    if (!message) {
+        return res.status(400).json({ error: "Message is required" });
+    }
+
+    try {
+        const context = "You are an assistant for the Community Food Donation Platform, a web app that connects food donors with those in need. Users can submit food donations with details like name, email, mobile, food type, expiry date, and location via /submit-donation. They can request food via /api/request-food. Donations are stored in MongoDB, and accepted donations trigger SMS notifications via Twilio. Help users with donating, requesting, troubleshooting, and understanding the platform.";
+
+        let completion;
+        try {
+            completion = await openai.chat.completions.create({
+                model: "gpt-4o",
+                messages: [
+                    { role: "system", content: context },
+                    { role: "user", content: message },
+                ],
+            });
+        } catch (error) {
+            if (error.status === 429) {
+                console.warn("GPT-4o quota exceeded, falling back to GPT-3.5-turbo");
+                completion = await openai.chat.completions.create({
+                    model: "gpt-3.5-turbo",
+                    messages: [
+                        { role: "system", content: context },
+                        { role: "user", content: message },
+                    ],
+                });
+            } else {
+                throw error;
+            }
+        }
+
+        const reply = completion.choices[0].message.content;
+
+        if (!reply || typeof reply !== "string" || reply.trim() === "") {
+            console.error("Invalid reply from OpenAI:", completion);
+            return res.status(500).json({ error: "Invalid response from AI" });
+        }
+
+        console.log("Chatbot response:", { message, reply }); // Additional logging
+        res.json({ reply });
+    } catch (error) {
+        console.error("AI Chat error:", error.message);
+        res.status(500).json({ error: "AI response failed", details: error.message });
+    }
+});
+
+
+
+// Start Server
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
