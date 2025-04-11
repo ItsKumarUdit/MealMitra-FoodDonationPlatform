@@ -37,6 +37,6 @@ Contributors
 
  Want to Part of our Project?🤝
 
-- We welcome contributions! Feel free to open an issue or submit a pull request.  
+- We welcome contributions! Feel free to contact.  
   Email - imkumarudit@gmail.com 
 
