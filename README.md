@@ -12,7 +12,9 @@ Features
 - Request System – Users can request food from available donations  
 - Real-time Updates – Dynamic UI updates for new donations and requests  
 - Contact & Support – Easy communication between donors and requesters  
-- Modern UI – Clean, interactive, and mobile-friendly design  
+- Modern UI – Clean, interactive, and mobile-friendly design
+- AI Chat-Bot Support
+- Google Maps Integration   
 
 ---
 
@@ -20,11 +22,10 @@ Tech Stack
 - Frontend: HTML, CSS, JavaScript  
 - Backend: Node.js, Express.js  
 - Database: MongoDB
-- AI Chat-Bot Support 
+- Gemini API
 - UI Enhancements: Bootstrap & TailwindCSS  
 - Authentication: JWT (JSON Web Tokens)
-- SMS features (Twilio API)
-- Google Maps Integration   
+- Twilio API  
 
 ---
 
