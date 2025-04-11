@@ -19,17 +19,12 @@ Features
 Tech Stack  
 - Frontend: HTML, CSS, JavaScript  
 - Backend: Node.js, Express.js  
-- Database: MongoDB  
+- Database: MongoDB
+- AI Chat-Bot Support 
 - UI Enhancements: Bootstrap & TailwindCSS  
-- Authentication: JWT (JSON Web Tokens)  
-
----
-
-Future Enhancements 
-- Email Notifications for food requests  
-- AI-based food demand prediction  
-- Google Maps API for location-based searches  
-- Admin Dashboard for better management  
+- Authentication: JWT (JSON Web Tokens)
+- SMS features (Twilio API)
+- Google Maps Integration   
 
 ---
 
