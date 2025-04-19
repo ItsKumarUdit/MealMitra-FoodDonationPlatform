@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="SideBar.css">
     <link rel="stylesheet" href="FSD_CSS.css">
     <style>
+        /* Existing styles unchanged */
         .login-button {
             position: fixed;
             top: 20px;
@@ -152,6 +153,17 @@
             opacity: 1;
             transform: scale(1);
         }
+        /* Added styles for feedback */
+        .error-message {
+            color: #f44336;
+            margin-top: 10px;
+            display: none;
+        }
+        .success-message {
+            color: #4CAF50;
+            margin-top: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -203,12 +215,14 @@
                 <input type="text" id="location" name="location" placeholder="Enter the location" required>
 
                 <button type="submit">Submit Donation</button>
+                <div id="error-message" class="error-message"></div>
+                <div id="success-message" class="success-message"></div>
             </form>
         </section>
     </main>
 
     <footer>
-        <p>© 2025 Community Food Donation Platform. All rights reserved.</p>
+        <p>© 2025 Food Donation Platform. All rights reserved.</p>
     </footer>
 
     <div class="profile-popup" id="profile-popup">
@@ -222,14 +236,14 @@
             const sidebar = document.getElementById("sidebar");
             sidebar.style.left = sidebar.style.left === "0px" ? "-250px" : "0px";
         }
-    
+
         const user = JSON.parse(localStorage.getItem('user'));
         const loginButton = document.getElementById('login-button');
         const profilePopup = document.getElementById('profile-popup');
         const profileInfo = document.getElementById('profile-info');
-    
+
         console.log('User from localStorage:', user);
-    
+
         if (user) {
             loginButton.textContent = user.name || 'User';
             loginButton.href = '#';
@@ -246,12 +260,12 @@
                 console.log('Redirecting to login');
             });
         }
-    
+
         function showProfile() {
             console.log('Showing profile popup');
             profilePopup.classList.add('active');
         }
-    
+
         function logout() {
             console.log('Logging out');
             localStorage.removeItem('user');
@@ -263,12 +277,24 @@
             });
             profilePopup.classList.remove('active');
         }
-    
+
         function goBack() {
             console.log('Going back');
             profilePopup.classList.remove('active');
         }
+
+         
     </script>
     <script src="FSD_JS.js"></script>
+    <div id="chat-container">
+        <div id="chat-box">
+            <div id="chat-log"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <button id="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
 </body>
 </html>
