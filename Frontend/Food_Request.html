@@ -7,60 +7,27 @@
     <link rel="stylesheet" href="SideBar.css">
     <link rel="stylesheet" href="FSD_CSS.css">
     <style>
-      .card-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            margin-top: 2rem;
-            padding: 1rem;
-            align-items: center;
-        }
+     .card-container {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 20px;
+    margin-top: 2rem;
+    padding: 2rem;
+    background: linear-gradient(to bottom right, #f0f8ff, #e6f0fa);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease-in-out;
+    
+    
+}
 
-        .donation-card {
-            width: 100%;
-            max-width: 320px;
-            padding: 20px;
-            background-color: white;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            text-align: left;
-            position: relative;
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
-            border: 2px solid #1769f6;
-            margin-top: 10px;
-        }
+.card-container:hover {
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.15);
+}
 
-        .donation-card:hover {
-            transform: scale(1.05);
-            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
-        }
 
-        .donation-card h3 {
-            font-size: 1.6rem;
-            margin-bottom: 0.5rem;
-            font-weight: bold;
-        }
-
-        .donation-card p {
-            font-size: 1rem;
-            margin-bottom: 0.8rem;
-        }
-
-        .donation-card button {
-            padding: 1rem;
-            background-color: #2575fc;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .donation-card button:hover {
-            background-color: #0066cc;
-        }
-
+ 
         footer {
             background: rgba(30, 45, 65, 0.95);
             color: #fff;
@@ -199,15 +166,16 @@
         </div>
         <div id="searchResults"></div>
         <section id="list">
-            <h2 class="section-heading">Food Requests</h2>
-            <div id="foodRequestList" class="card-container" style="background-color: aliceblue;">
-                <!-- Food requests will appear here as donation-like cards -->
-            </div>
+             <h2 class="section-heading">Food Requests</h2>
+<div id="foodRequestList" class="card-container">
+    <!-- Food requests will appear here as donation-like cards -->
+</div>
+
         </section>
     </main>
 
     <footer>
-        <p>© 2025 Community Food Request Platform. All rights reserved.</p>
+        <p>© 2025 Food Request Platform. All rights reserved.</p>
     </footer>
     <style> 
         #login-button {
@@ -306,5 +274,15 @@
             window.location.href = 'Food_Request.html';
         }
     </script>
+     <div id="chat-container">
+        <div id="chat-box">
+            <div id="chat-log"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <button id="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
 </body>
 </html>
