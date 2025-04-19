@@ -17,7 +17,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 // Twilio Configuration
 const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC***************************59';
 const authToken = process.env.TWILIO_AUTH_TOKEN || 'aa*****************************39';
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+15**********77';
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+15*********7';
 const twilioClient = new twilio(accountSid, authToken);
 
 // MongoDB Connection
@@ -189,56 +189,193 @@ app.patch("/api/donations/:id/accept", async (req, res) => {
 });
 
 // AI Chat Endpoint (OpenAI GPT Chatbot)
-const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY || "sk*****************************************A"
+ 
+const { GoogleGenerativeAI } = require("@google/generative-ai");
+
+ 
+const port = process.env.PORT || 3000;
+
+app.use(cors());
+app.use(express.json());
+
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = new GoogleGenerativeAI(apiKey);
+
+// 🌟 System instruction for the chatbot
+const model = genAI.getGenerativeModel({
+    model: "gemini-2.0-flash",
+    systemInstruction: `System Prompt / Instruction for AI Chatbot:
+ You are a helpful, friendly, and intelligent AI assistant designed to assist users on the Community Food Donation Platform. Your goal is to provide clear, accurate, and easy-to-understand guidance on how users can donate food, request food, log in or sign up, manage donations, and use other features of the platform. Always maintain a warm, welcoming tone and answer in simple, step-by-step language suitable for all users, including those who are new to using technology.
+
+The chatbot must understand and respond to user queries related to:
+
+✅ Main Topics to Cover
+How to Donate Food
+
+Steps to donate food
+
+Required information while donating
+
+How to select food categories and quantity
+
+Scheduling pickup (if applicable)
+
+Confirmation after donation
+
+How to Request Food
+
+Steps to place a food request
+
+Location-based search
+
+How to filter or sort by food type/availability
+
+Request status tracking
+
+Login / Signup Help
+
+How to create an account as a Donor or Requester
+
+Required fields: Name, Mobile Number, Role, Password
+
+Password requirements (min. 6 characters, etc.)
+
+Login troubleshooting (e.g., forgot password)
+
+Accepting or Managing Donations (For Requesters)
+
+How to view available donations
+
+Steps to accept a donation
+
+Notifications for accepted donations
+
+Cancellation policy or process (if allowed)
+
+Profile & Session
+
+How to update profile information
+
+How to log out
+
+Switching roles between Donor and Requester
+
+Contact Us & Reporting Issues
+
+How to contact support
+
+How to report a problem or give feedback
+
+Where reports are stored (MongoDB)
+
+Chatbot Smart Features
+
+Answer follow-up questions
+
+Guide the user if their query is unclear (e.g., “Could you please specify if you are trying to donate or request food?”)
+
+Detect user role (Donor/Requester) from the conversation context and tailor responses accordingly
+
+🧠 Intelligent Prompting Behavior Examples
+If a user asks “I want to give food”, the bot should respond:
+
+Great! Here's how you can donate food on our platform...
+
+If a user types “How do I sign up?” or “Can I login without mobile number?”, the bot should respond:
+
+To sign up, you’ll need to provide your name, mobile number, password, and select your role (Donor or Requester)...
+
+If a user says “I accepted a donation, now what?”, the bot should respond:
+
+Once you've accepted a donation, you’ll receive a confirmation with pickup/delivery instructions. You can also view it under the 'My Requests' section...
+
+🛠 Technical and Platform-Specific Instructions (Internal Use)
+Assume the platform uses MongoDB for storing user data, donations, and requests.
+
+Role-based access: Only Donors can post food, only Requesters can accept.
+
+Use localStorage for session tracking.
+
+Login is handled via a popup modal (not a separate page).
+
+After login, a profile icon replaces the login button.
+
+Show/hide password option in the login form.
+
+Twilio integration is used for sending SMS alerts for accepted donations.,
+`
 });
 
-app.post("/api/chat", async (req, res) => {
-    const { message } = req.body;
-    if (!message) {
-        return res.status(400).json({ error: "Message is required" });
-    }
+// 🔧 Chat generation config
+const generationConfig = {
+    temperature: 1,
+    topP: 0.95,
+    topK: 40,
+    maxOutputTokens: 819,
+};
 
-    try {
-        const context = "You are an assistant for the Community Food Donation Platform, a web app that connects food donors with those in need. Users can submit food donations with details like name, email, mobile, food type, expiry date, and location via /submit-donation. They can request food via /api/request-food. Donations are stored in MongoDB, and accepted donations trigger SMS notifications via Twilio. Help users with donating, requesting, troubleshooting, and understanding the platform.";
+// 💬 In-memory session store
+const chatSessions = new Map();
 
-        let completion;
+// 🧠 Handle chat messages
+app.post('/api/chat', async (req, res) => {
+    const userMessage = req.body.message;
+    let sessionId = req.body.sessionId;
+
+    // If no sessionId provided or invalid, create a new one
+    if (!sessionId || !chatSessions.has(sessionId)) {
+        sessionId = Math.random().toString(36).substring(2, 15);
+        const chat = model.startChat({ generationConfig });
+        chatSessions.set(sessionId, { chat, lastUsed: Date.now() });
+
         try {
-            completion = await openai.chat.completions.create({
-                model: "gpt-4o",
-                messages: [
-                    { role: "system", content: context },
-                    { role: "user", content: message },
-                ],
-            });
-        } catch (error) {
-            if (error.status === 429) {
-                console.warn("GPT-4o quota exceeded, falling back to GPT-3.5-turbo");
-                completion = await openai.chat.completions.create({
-                    model: "gpt-3.5-turbo",
-                    messages: [
-                        { role: "system", content: context },
-                        { role: "user", content: message },
-                    ],
-                });
-            } else {
-                throw error;
-            }
+            const warmup = await chat.sendMessage("Hello");
+            const warmupReply = warmup.response?.candidates?.[0]?.content?.parts?.[0]?.text || "Hi there!";
+            return res.json({ reply: warmupReply, sessionId });
+        } catch (err) {
+            console.error("Warm-up error:", err);
+            return res.status(500).json({ error: "Failed to initialize chat session." });
         }
-
-        const reply = completion.choices[0].message.content;
-
-        if (!reply || typeof reply !== "string" || reply.trim() === "") {
-            console.error("Invalid reply from OpenAI:", completion);
-            return res.status(500).json({ error: "Invalid response from AI" });
-        }
-
-        console.log("Chatbot response:", { message, reply }); // Additional logging
-        res.json({ reply });
-    } catch (error) {
-        console.error("AI Chat error:", error.message);
-        res.status(500).json({ error: "AI response failed", details: error.message });
     }
+
+    const session = chatSessions.get(sessionId);
+    session.lastUsed = Date.now();
+
+    if (userMessage) {
+        try {
+            const result = await session.chat.sendMessage(userMessage);
+            const responseText = result.response?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            console.log(`[Session: ${sessionId}] User: ${userMessage}`);
+            console.log(`[Session: ${sessionId}] Bot: ${responseText}`);
+
+            if (responseText) {
+                return res.json({ reply: responseText, sessionId });
+            } else {
+                return res.status(500).json({ error: 'No response from the AI.' });
+            }
+        } catch (err) {
+            console.error("Chat error:", err);
+            return res.status(500).json({ error: 'Error processing your message.' });
+        }
+    }
+
+    return res.status(200).json({ reply: "How can I help you?", sessionId });
+});
+
+// ♻️ Optional: Clean up inactive sessions (every 10 minutes)
+setInterval(() => {
+    const now = Date.now();
+    for (const [id, session] of chatSessions) {
+        if (now - session.lastUsed > 15 * 60 * 1000) {
+            chatSessions.delete(id);
+        }
+    }
+}, 10 * 60 * 1000);
+
+// 🚀 Start the server
+app.listen(port, () => {
+    console.log(`✅ AI Chatbot Server running at http://localhost:${port}`);
 });
 
 
