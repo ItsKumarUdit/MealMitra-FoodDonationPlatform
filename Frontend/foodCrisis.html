@@ -295,7 +295,7 @@
     </div>
 
     <footer>
-        © 2025 Starvation Awareness Initiative
+        © 2025 Food Request Platform. All rights reserved.
     </footer>
 
     <div class="profile-popup" id="profile-popup">
@@ -352,5 +352,16 @@
         }
     </script>
     <script src="FSD_JS.js"></script>
+    <div id="chat-container">
+        <div id="chat-box">
+            <div id="chat-log"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <button id="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
+ 
 </body>
 </html>
