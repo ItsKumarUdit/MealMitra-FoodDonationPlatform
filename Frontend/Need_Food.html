@@ -256,7 +256,7 @@
     </main>
 
     <footer>
-        <p>© 2025 Community Food Request Platform. All rights reserved.</p>
+        <p>© 2025 Food Request Platform. All rights reserved.</p>
     </footer>
 
     <div class="profile-popup" id="profile-popup">
@@ -320,5 +320,16 @@
             profilePopup.classList.remove('active'); // Just hide popup
         }
     </script>
+     <script src="FSD_JS.js"></script>
+     <div id="chat-container">
+        <div id="chat-box">
+            <div id="chat-log"></div>
+            <div class="chat-input-container">
+                <input type="text" id="chat-input" placeholder="Ask something..." onkeypress="if(event.key === 'Enter') sendMessage()" />
+                <button onclick="sendMessage()">Send</button>
+            </div>
+        </div>
+        <button id="chat-toggle" onclick="toggleChat()">💬</button>
+    </div>
 </body>
 </html>
