@@ -347,6 +347,8 @@ async function acceptRequest(requestId) {
 
  
 
+ let sessionId = null;
+
 function toggleChat() {
     const chatBox = document.getElementById("chat-box");
     chatBox.style.display = chatBox.style.display === "none" ? "block" : "none";
@@ -361,16 +363,16 @@ async function sendMessage() {
     log.innerHTML += `<div><strong>You:</strong> ${message}</div>`;
     input.value = '';
 
-    // Add typing indicator
+    // Typing indicator
     const typingId = `typing-${Date.now()}`;
     log.innerHTML += `<div id="${typingId}"><strong>Bot:</strong> Typing...</div>`;
     log.scrollTop = log.scrollHeight;
 
     try {
-        const res = await fetch('http://localhost:5000/api/chat', {
+        const res = await fetch('http://localhost:3000/api/chat', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ message })
+            body: JSON.stringify({ message, sessionId })
         });
 
         const data = await res.json();
@@ -380,6 +382,7 @@ async function sendMessage() {
 
         if (data.reply) {
             log.innerHTML += `<div><strong>Bot:</strong> ${data.reply}</div>`;
+            if (data.sessionId) sessionId = data.sessionId; // Save for future messages
         } else if (data.error) {
             log.innerHTML += `<div><strong>Bot:</strong> Error: ${data.error}${data.details ? ' - ' + data.details : ''}</div>`;
         } else {
