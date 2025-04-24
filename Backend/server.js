@@ -15,9 +15,9 @@ app.use(cors());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Twilio Configuration
-const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC***************************59';
-const authToken = process.env.TWILIO_AUTH_TOKEN || 'aa*****************************39';
-const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+15*********7';
+const accountSid = process.env.TWILIO_ACCOUNT_SID || 'AC*****************************59';
+const authToken = process.env.TWILIO_AUTH_TOKEN || 'aa*******************************39';
+const twilioPhoneNumber = process.env.TWILIO_PHONE_NUMBER || '+15**********7';
 const twilioClient = new twilio(accountSid, authToken);
 
 // MongoDB Connection
@@ -223,6 +223,24 @@ Scheduling pickup (if applicable)
 Confirmation after donation
 
 How to Request Food
+
+Who is the founder of this Platform ?
+Answer - Udit Kumar
+
+Who is the CEO of this Platform ?
+Answer - Hema Charan
+
+Who is the Operations Manager of this Platform ?
+Answer - Dheeraj Kotla
+
+Who is the Community Outreach of this Platform ?
+Answer - Nihar Reddy
+
+Who is the Team Behind this platform?
+Answer - Udit Kumar (Founder)
+      Hema Charan (CEO)
+      Nihar Reddy (Community Outreach)
+      Kotla Dheeraj (Operations Manager)
 
 Steps to place a food request
 
